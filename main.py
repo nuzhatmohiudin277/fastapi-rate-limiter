@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Request, HTTPException
+from fastapi import FastAPI, Request
+from fastapi.responses import JSONResponse
 import time
 import uvicorn
 
@@ -12,14 +13,14 @@ async def rate_limit(request: Request, call_next):
     ip = request.client.host
     now = time.time()
     
-    # Check if IP has made a request within the last 1.0 seconds
+    # Return a JSONResponse directly instead of raising an exception
     if ip in clients and now - clients[ip] < 1.0:
-        raise HTTPException(status_code=429, detail="Too Many Requests: Please slow down.")
+        return JSONResponse(
+            status_code=429, 
+            content={"detail": "Too Many Requests: Please slow down."}
+        )
     
-    # Update the timestamp for the IP
     clients[ip] = now
-    
-    # Process the request
     response = await call_next(request)
     return response
 
